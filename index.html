@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="th">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจัดการเอกสาร</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+    }
+    
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 90%;
+      width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .table-expanded {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      background: white;
+      overflow: auto;
+      padding: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+      }
+      
+      table {
+        font-size: 0.875rem;
+      }
+      
+      .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+      }
+      
+      th, td {
+        padding: 0.5rem !important;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+  <div id="loginScreen" class="flex items-center justify-center min-h-full p-4">
+   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">ระบบจัดการเอกสาร</h1>
+    <div class="mb-6"><label for="loginPassword" class="block text-gray-700 font-semibold mb-2">รหัสผ่าน</label> <input type="password" id="loginPassword" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" placeholder="กรุณาใส่รหัสผ่าน">
+    </div><button id="loginButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-200">เข้าสู่ระบบ</button>
+   </div>
+  </div>
+  <main id="mainApp" style="display: none;">
+   <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+     <div class="w-full"><img src="https://img2.pic.in.th/pic/messageImage_1762848995191.jpg" alt="Banner" class="w-full h-auto object-cover" onerror="this.style.display='none';">
+     </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+     <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 mb-6 text-center">ระบบจัดการเอกสาร</h1>
+     <form id="documentForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+       <div><label for="name" class="block text-gray-700 font-semibold mb-2">ชื่อ-นามสกุล *</label> <input type="text" id="name" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+       </div>
+       <div><label for="position" class="block text-gray-700 font-semibold mb-2">ตำแหน่ง *</label> <input type="text" id="position" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+       </div>
+       <div><label for="employeeId" class="block text-gray-700 font-semibold mb-2">รหัสประจำตัว (ตัวเลขเท่านั้น) *</label> <input type="text" id="employeeId" required pattern="[0-9]+" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+       </div>
+       <div><label for="date" class="block text-gray-700 font-semibold mb-2">วันที่ *</label> <input type="date" id="date" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+       </div>
+      </div>
+      <div><label for="description" class="block text-gray-700 font-semibold mb-2">รายละเอียด *</label> <textarea id="description" required rows="3" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"></textarea>
+      </div>
+      <div><label for="fileUpload" class="block text-gray-700 font-semibold mb-2">อัพโหลดไฟล์หรือรูปภาพ *</label> <input type="file" id="fileUpload" required accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+       <p class="text-sm text-gray-500 mt-1">รองรับ: รูปภาพ, PDF, Word, Excel</p>
+      </div><button type="submit" id="submitButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-200">ส่งเอกสาร</button>
+     </form>
+    </div>
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8" id="tableSection">
+     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <h2 class="text-2xl md:text-3xl font-bold text-indigo-600">รายการเอกสาร</h2>
+      <div class="flex gap-2 flex-wrap"><button id="exportButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Export</button> <button id="expandButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">ขยายตาราง</button> <button id="collapseButton" style="display: none;" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">ย่อ</button>
+      </div>
+     </div>
+     <div class="table-container overflow-x-auto">
+      <table class="w-full border-collapse">
+       <thead>
+        <tr class="bg-indigo-600 text-white">
+         <th class="px-4 py-3 text-left cursor-pointer hover:bg-indigo-700" data-sort="index">ลำดับที่ ↕</th>
+         <th class="px-4 py-3 text-left cursor-pointer hover:bg-indigo-700" data-sort="name">ชื่อ ↕</th>
+         <th class="px-4 py-3 text-left cursor-pointer hover:bg-indigo-700" data-sort="position">ตำแหน่ง ↕</th>
+         <th class="px-4 py-3 text-left cursor-pointer hover:bg-indigo-700" data-sort="employeeId">รหัส ↕</th>
+         <th class="px-4 py-3 text-left cursor-pointer hover:bg-indigo-700" data-sort="date">วันที่ ↕</th>
+         <th class="px-4 py-3 text-left">รายละเอียด</th>
+         <th class="px-4 py-3 text-left">ไฟล์</th>
+         <th class="px-4 py-3 text-left cursor-pointer hover:bg-indigo-700" data-sort="status">สถานะ ↕</th>
+         <th class="px-4 py-3 text-left">จัดการ</th>
+        </tr>
+       </thead>
+       <tbody id="documentTableBody">
+       </tbody>
+      </table>
+     </div>
+     <div id="pagination" class="flex justify-center items-center gap-2 mt-6 flex-wrap">
+     </div>
+    </div>
+   </div>
+   <footer class="bg-indigo-600 text-white py-6 mt-12">
+    <div class="container mx-auto px-4 text-center">
+     <p class="text-sm md:text-base mb-2"><strong>Developed by Mr. Supakrit Tawang (ศุภกฤษ ทะวัง ชผ.บส.กฟจ.นพ.)</strong></p>
+     <p class="text-sm md:text-base mb-3">PEA Nakhon Phanom Provincial Electricity Authority</p>
+     <p class="text-xs md:text-sm opacity-90">© 2025 Document Management System. All rights reserved.</p>
+    </div>
+   </footer>
+  </main>
+  <div id="deleteModal" class="modal-overlay">
+   <div class="modal-content">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
+    <div class="mb-4"><label for="deleteAdminPassword" class="block text-gray-700 font-semibold mb-2">รหัสผ่านแอดมิน</label> <input type="password" id="deleteAdminPassword" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+    </div>
+    <p class="text-gray-600 mb-6">คุณแน่ใจหรือไม่ที่จะลบเอกสารนี้?</p>
+    <div class="flex gap-3 justify-end"><button id="cancelDelete" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg transition duration-200">ยกเลิก</button> <button id="confirmDelete" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-200">ลบ</button>
+    </div>
+   </div>
+  </div>
+  <div id="statusModal" class="modal-overlay">
+   <div class="modal-content">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">อัพเดทสถานะ</h3>
+    <div class="mb-4"><label for="adminPassword" class="block text-gray-700 font-semibold mb-2">รหัสผ่านแอดมิน</label> <input type="password" id="adminPassword" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
+    </div>
+    <div class="mb-6"><label for="newStatus" class="block text-gray-700 font-semibold mb-2">สถานะใหม่</label> <select id="newStatus" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"> <option value="รอดำเนินการ">รอดำเนินการ</option> <option value="กำลังดำเนินการ">กำลังดำเนินการ</option> <option value="เสร็จสิ้น">เสร็จสิ้น</option> <option value="ยกเลิก">ยกเลิก</option> </select>
+    </div>
+    <div class="flex gap-3 justify-end"><button id="cancelStatus" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg transition duration-200">ยกเลิก</button> <button id="confirmStatus" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition duration-200">บันทึก</button>
+    </div>
+   </div>
+  </div>
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx7uPS44sJGN1dQv-qVmyV78zmqGwStSCvWW6ZcTaxnftICipelSjYQCky5r-3KYx0Pmw/exec';
+    
+    let currentDocuments = [];
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let sortField = null;
+    let sortDirection = 'asc';
+    let deleteTargetId = null;
+    let statusTargetId = null;
+    let isLoggedIn = false;
+
+    document.getElementById('loginButton').addEventListener('click', async () => {
+      const password = document.getElementById('loginPassword').value;
+      
+      if (!password) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาใส่รหัสผ่าน',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      Swal.fire({
+        title: 'กำลังตรวจสอบ...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      try {
+        const response = await fetch(`${API_URL}?action=checkPassword&password=${encodeURIComponent(password)}`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+        }
+        
+        if (result.success) {
+          isLoggedIn = true;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'เข้าสู่ระบบสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          loadDocuments();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'รหัสผ่านไม่ถูกต้อง',
+            confirmButtonColor: '#4F46E5'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#4F46E5'
+        });
+      }
+    });
+
+    const today = new Date();
+    const thaiDate = new Date(today.getTime() + (7 * 60 * 60 * 1000));
+    document.getElementById('date').valueAsDate = thaiDate;
+
+    document.getElementById('documentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('fileUpload');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาเลือกไฟล์',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      Swal.fire({
+        title: 'กำลังส่งเอกสาร...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      const submitButton = document.getElementById('submitButton');
+      submitButton.disabled = true;
+      
+      try {
+        const base64 = await fileToBase64(file);
+        
+        const formData = {
+          action: 'upload',
+          name: document.getElementById('name').value,
+          position: document.getElementById('position').value,
+          employeeId: document.getElementById('employeeId').value,
+          date: document.getElementById('date').value,
+          description: document.getElementById('description').value,
+          fileName: file.name,
+          fileData: base64,
+          mimeType: file.type
+        };
+        
+        const params = new URLSearchParams(formData);
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: params
+        });
+        
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+        }
+        
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'บันทึกสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          document.getElementById('documentForm').reset();
+          const today = new Date();
+          const thaiDate = new Date(today.getTime() + (7 * 60 * 60 * 1000));
+          document.getElementById('date').valueAsDate = thaiDate;
+          loadDocuments();
+        } else {
+          throw new Error(result.message || 'เกิดข้อผิดพลาด');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#4F46E5'
+        });
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function loadDocuments() {
+      try {
+        const response = await fetch(`${API_URL}?action=list`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          console.error('Error parsing JSON:', e);
+          currentDocuments = [];
+          renderTable();
+          return;
+        }
+        
+        if (result.success) {
+          currentDocuments = result.data || [];
+          renderTable();
+        }
+      } catch (error) {
+        console.error('Error loading documents:', error);
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('documentTableBody');
+      tbody.innerHTML = '';
+      
+      let sortedDocs = [...currentDocuments];
+      
+      if (sortField) {
+        sortedDocs.sort((a, b) => {
+          let aVal = a[sortField];
+          let bVal = b[sortField];
+          
+          if (sortField === 'date') {
+            aVal = new Date(aVal);
+            bVal = new Date(bVal);
+          }
+          
+          if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageData = sortedDocs.slice(startIndex, endIndex);
+      
+      pageData.forEach((doc, index) => {
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-50';
+        
+        const globalIndex = startIndex + index + 1;
+        
+        const statusColor = {
+          'รอดำเนินการ': 'bg-yellow-100 text-yellow-800',
+          'กำลังดำเนินการ': 'bg-blue-100 text-blue-800',
+          'เสร็จสิ้น': 'bg-green-100 text-green-800',
+          'ยกเลิก': 'bg-red-100 text-red-800'
+        }[doc.status] || 'bg-gray-100 text-gray-800';
+        
+        const fileId = doc.fileUrl.split('/d/')[1];
+        const viewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : doc.fileUrl;
+        
+        row.innerHTML = `
+          <td class="px-4 py-3">${globalIndex}</td>
+          <td class="px-4 py-3">${doc.name}</td>
+          <td class="px-4 py-3">${doc.position}</td>
+          <td class="px-4 py-3">${doc.employeeId}</td>
+          <td class="px-4 py-3">${formatDate(doc.date)}</td>
+          <td class="px-4 py-3 max-w-xs truncate">${doc.description}</td>
+          <td class="px-4 py-3">
+            <a href="${viewUrl}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">ดูไฟล์</a>
+          </td>
+          <td class="px-4 py-3">
+            <span class="px-3 py-1 rounded-full text-sm font-semibold ${statusColor}">${doc.status}</span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              <button onclick="openStatusModal('${doc.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">อัพเดท</button>
+              <button onclick="openDeleteModal('${doc.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">ลบ</button>
+            </div>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+      
+      renderPagination(sortedDocs.length);
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      });
+    }
+
+    function renderPagination(totalItems) {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+      
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      
+      if (totalPages <= 1) return;
+      
+      const prevButton = document.createElement('button');
+      prevButton.textContent = '← ก่อนหน้า';
+      prevButton.className = 'px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold transition duration-200' + (currentPage === 1 ? ' opacity-50 cursor-not-allowed' : '');
+      prevButton.disabled = currentPage === 1;
+      prevButton.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      };
+      pagination.appendChild(prevButton);
+      
+      const pageInfo = document.createElement('span');
+      pageInfo.textContent = `หน้า ${currentPage} / ${totalPages}`;
+      pageInfo.className = 'px-4 py-2 font-semibold';
+      pagination.appendChild(pageInfo);
+      
+      const nextButton = document.createElement('button');
+      nextButton.textContent = 'ถัดไป →';
+      nextButton.className = 'px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold transition duration-200' + (currentPage === totalPages ? ' opacity-50 cursor-not-allowed' : '');
+      nextButton.disabled = currentPage === totalPages;
+      nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      };
+      pagination.appendChild(nextButton);
+    }
+
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.sort;
+        
+        if (sortField === field) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortField = field;
+          sortDirection = 'asc';
+        }
+        
+        renderTable();
+      });
+    });
+
+    window.openDeleteModal = (id) => {
+      deleteTargetId = id;
+      document.getElementById('deleteAdminPassword').value = '';
+      document.getElementById('deleteModal').classList.add('active');
+    };
+
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.remove('active');
+      deleteTargetId = null;
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      
+      const password = document.getElementById('deleteAdminPassword').value;
+      
+      if (!password) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาใส่รหัสผ่านแอดมิน',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      document.getElementById('deleteModal').classList.remove('active');
+      
+      Swal.fire({
+        title: 'กำลังลบ...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      try {
+        const response = await fetch(`${API_URL}?action=delete&id=${deleteTargetId}&password=${encodeURIComponent(password)}`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error('ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+        }
+        
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'ลบสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          loadDocuments();
+        } else {
+          throw new Error(result.message || 'รหัสผ่านไม่ถูกต้อง');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#4F46E5'
+        });
+      } finally {
+        deleteTargetId = null;
+      }
+    });
+
+    window.openStatusModal = (id) => {
+      statusTargetId = id;
+      const doc = currentDocuments.find(d => d.id === id);
+      if (doc) {
+        document.getElementById('newStatus').value = doc.status;
+      }
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('statusModal').classList.add('active');
+    };
+
+    document.getElementById('cancelStatus').addEventListener('click', () => {
+      document.getElementById('statusModal').classList.remove('active');
+      statusTargetId = null;
+    });
+
+    document.getElementById('confirmStatus').addEventListener('click', async () => {
+      const password = document.getElementById('adminPassword').value;
+      const newStatus = document.getElementById('newStatus').value;
+      
+      if (!password) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาใส่รหัสผ่านแอดมิน',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      document.getElementById('statusModal').classList.remove('active');
+      
+      Swal.fire({
+        title: 'กำลังอัพเดท...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      try {
+        const response = await fetch(`${API_URL}?action=updateStatus&id=${statusTargetId}&status=${encodeURIComponent(newStatus)}&password=${encodeURIComponent(password)}`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error('ไม่สามารถอัพเดทข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+        }
+        
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'อัพเดทสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          loadDocuments();
+        } else {
+          throw new Error(result.message || 'รหัสผ่านไม่ถูกต้อง');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#4F46E5'
+        });
+      } finally {
+        statusTargetId = null;
+      }
+    });
+
+    document.getElementById('expandButton').addEventListener('click', () => {
+      const tableSection = document.getElementById('tableSection');
+      tableSection.classList.add('table-expanded');
+      document.getElementById('expandButton').style.display = 'none';
+      document.getElementById('collapseButton').style.display = 'inline-block';
+    });
+
+    document.getElementById('collapseButton').addEventListener('click', () => {
+      const tableSection = document.getElementById('tableSection');
+      tableSection.classList.remove('table-expanded');
+      document.getElementById('expandButton').style.display = 'inline-block';
+      document.getElementById('collapseButton').style.display = 'none';
+    });
+
+    document.getElementById('exportButton').addEventListener('click', () => {
+      if (currentDocuments.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีข้อมูลให้ Export',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      const headers = ['ลำดับที่', 'ชื่อ', 'ตำแหน่ง', 'รหัสประจำตัว', 'วันที่', 'รายละเอียด', 'สถานะ', 'ไฟล์'];
+      const rows = currentDocuments.map((doc, index) => [
+        index + 1,
+        doc.name,
+        doc.position,
+        doc.employeeId,
+        formatDate(doc.date),
+        doc.description,
+        doc.status,
+        doc.fileUrl
+      ]);
+      
+      let csv = '\uFEFF';
+      csv += headers.join(',') + '\n';
+      rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `documents_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export สำเร็จ',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc50d06025a18c',t:'MTc2Mjg0ODY1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
