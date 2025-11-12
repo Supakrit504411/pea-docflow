@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PEA NPN DOC-FLOW</title>
+  <title>ระบบจัดการเอกสาร</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -76,7 +76,7 @@
  <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
   <div id="loginScreen" class="flex items-center justify-center min-h-full p-4">
    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">PEA NPN DOC-FLOW</h1>
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">ระบบจัดการเอกสาร</h1>
     <div class="mb-6"><label for="loginPassword" class="block text-gray-700 font-semibold mb-2">รหัสผ่าน</label> <input type="password" id="loginPassword" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" placeholder="กรุณาใส่รหัสผ่าน">
     </div><button id="loginButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-200">เข้าสู่ระบบ</button>
    </div>
@@ -84,11 +84,11 @@
   <main id="mainApp" style="display: none;">
    <div class="container mx-auto px-4 py-8 max-w-7xl">
     <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-     <div class="w-full"><img src="https://img2.pic.in.th/pic/messageImage_1762848995191.jpg" alt="Banner" class="w-full h-auto object-cover" onerror="this.style.display='none';">
+     <div class="w-full"><img src="https://sabuyservice.pea.co.th/_next/image?url=https%3A%2F%2Fsabuyservice.pea.co.th%2Ffiles%2Fcontents%2FBanner%2F.%20-7)%202330x713%20pixal%20(rgb)%20%E0%B8%AA%E0%B8%B7%E0%B9%88%E0%B8%AD%20banner2.png&amp;w=1920&amp;q=100" alt="Banner" class="w-full h-auto object-cover" onerror="this.style.display='none';">
      </div>
     </div>
     <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
-     <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 mb-6 text-center">PEA NPN DOC-FLOW</h1>
+     <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 mb-6 text-center">ระบบจัดการเอกสาร</h1>
      <form id="documentForm" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
        <div><label for="name" class="block text-gray-700 font-semibold mb-2">ชื่อ-นามสกุล *</label> <input type="text" id="name" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
@@ -100,7 +100,7 @@
        <div><label for="date" class="block text-gray-700 font-semibold mb-2">วันที่ *</label> <input type="date" id="date" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
        </div>
       </div>
-      <div><label for="description" class="block text-gray-700 font-semibold mb-2">รายละเอียด *</label> <textarea id="description" required rows="3" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"></textarea>
+      <div><label for="description" class="block text-gray-700 font-semibold mb-2">รายละเอียด *</label> <select id="description" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"> <option value="">-- เลือกรายละเอียด --</option> <option value="ค่ารักษาพยาบาล">ค่ารักษาพยาบาล</option> <option value="เบี้ยเลี้ยง-ที่พัก">เบี้ยเลี้ยง-ที่พัก</option> <option value="ค่าเล่าเรียน">ค่าเล่าเรียน</option> <option value="ค่าแรง">ค่าแรง</option> <option value="ค่าจ้างเหมาขยายเขต">ค่าจ้างเหมาขยายเขต</option> <option value="ค่าซ่อมรถ">ค่าซ่อมรถ</option> <option value="ค่าสาธารณูปโภค(โทรศัพท์,น้ำประปา,ไปรษณีย์)">ค่าสาธารณูปโภค(โทรศัพท์,น้ำประปา,ไปรษณีย์)</option> <option value="ค่าน้ำมันเชื้อเพลิง">ค่าน้ำมันเชื้อเพลิง</option> <option value="ค่าประชุมชี้แจง">ค่าประชุมชี้แจง</option> <option value="ค่าวัสดุสำนักงาน">ค่าวัสดุสำนักงาน</option> <option value="ค่าวัสดุซื้อตรงเข้างานจ้างเหมา">ค่าวัสดุซื้อตรงเข้างานจ้างเหมา</option> <option value="ใบสำคัญจ่ายอื่นๆ">ใบสำคัญจ่ายอื่นๆ</option> </select>
       </div>
       <div><label for="fileUpload" class="block text-gray-700 font-semibold mb-2">อัพโหลดไฟล์หรือรูปภาพ *</label> <input type="file" id="fileUpload" required accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
        <p class="text-sm text-gray-500 mt-1">รองรับ: รูปภาพ, PDF, Word, Excel</p>
@@ -699,5 +699,5 @@
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc50d06025a18c',t:'MTc2Mjg0ODY1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d1c065e2b64b8f',t:'MTc2MjkwNTY1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
