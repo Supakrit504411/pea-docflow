@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ปิดปรับปรุง ตับเดียว</title>
+  <title>PEA NPN DOC-FLOW</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -76,8 +76,8 @@
  <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
   <div id="loginScreen" class="flex items-center justify-center min-h-full p-4">
    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">ปิดปรับปรุง ตับเดียว</h1>
-    <div class="mb-6"><label for="loginPassword" class="block text-gray-700 font-semibold mb-2">ติดต่อ ว.นิว ว่าที่ ผจก.ปลาปากหรือ หผ.กป.นาแกเท่านั้น มีอารมณ์เป็นคนเดียวหรอ</label> <input type="password" id="loginPassword" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" placeholder="วันนี้ไม่เห็นค่า วันหน้าไปเป็นผจก xs แล้วจะกลับมาดื่มน้ำ">
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">PEA NPN DOC-FLOW</h1>
+    <div class="mb-6"><label for="loginPassword" class="block text-gray-700 font-semibold mb-2">ผสน.กฟจ.นพ. (Ver1.0)</label> <input type="password" id="loginPassword" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500" placeholder="กรุณาใส่รหัสผ่าน">
     </div><button id="loginButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-200">เข้าสู่ระบบ</button>
    </div>
   </div>
@@ -100,7 +100,7 @@
        <div><label for="date" class="block text-gray-700 font-semibold mb-2">วันที่ *</label> <input type="date" id="date" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
        </div>
       </div>
-      <div><label for="description" class="block text-gray-700 font-semibold mb-2">รายละเอียด *</label> <textarea id="description" required rows="3" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"></textarea>
+      <div><label for="description" class="block text-gray-700 font-semibold mb-2">รายละเอียด *</label> <select id="description" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"> <option value="">-- เลือกรายละเอียด --</option> <option value="ค่ารักษาพยาบาล">ค่ารักษาพยาบาล</option> <option value="เบี้ยเลี้ยง-ที่พัก">เบี้ยเลี้ยง-ที่พัก</option> <option value="ค่าเล่าเรียน">ค่าเล่าเรียน</option> <option value="ค่าแรง">ค่าแรง</option> <option value="ค่าจ้างเหมาขยายเขต">ค่าจ้างเหมาขยายเขต</option> <option value="ค่าซ่อมรถ">ค่าซ่อมรถ</option> <option value="ค่าสาธารณูปโภค(โทรศัพท์,น้ำประปา,ไปรษณีย์)">ค่าสาธารณูปโภค(โทรศัพท์,น้ำประปา,ไปรษณีย์)</option> <option value="ค่าน้ำมันเชื้อเพลิง">ค่าน้ำมันเชื้อเพลิง</option> <option value="ค่าประชุมชี้แจง">ค่าประชุมชี้แจง</option> <option value="ค่าวัสดุสำนักงาน">ค่าวัสดุสำนักงาน</option> <option value="ค่าวัสดุซื้อตรงเข้างานจ้างเหมา">ค่าวัสดุซื้อตรงเข้างานจ้างเหมา</option> <option value="ใบสำคัญจ่ายอื่นๆ">ใบสำคัญจ่ายอื่นๆ</option> </select>
       </div>
       <div><label for="fileUpload" class="block text-gray-700 font-semibold mb-2">อัพโหลดไฟล์หรือรูปภาพ *</label> <input type="file" id="fileUpload" required accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500">
        <p class="text-sm text-gray-500 mt-1">รองรับ: รูปภาพ, PDF, Word, Excel</p>
@@ -328,10 +328,376 @@
       }
     });
 
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
 
+    async function loadDocuments() {
+      try {
+        const response = await fetch(`${API_URL}?action=list`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          console.error('Error parsing JSON:', e);
+          currentDocuments = [];
+          renderTable();
+          return;
+        }
+        
+        if (result.success) {
+          currentDocuments = result.data || [];
+          renderTable();
+        }
+      } catch (error) {
+        console.error('Error loading documents:', error);
+      }
+    }
 
+    function renderTable() {
+      const tbody = document.getElementById('documentTableBody');
+      tbody.innerHTML = '';
+      
+      let sortedDocs = [...currentDocuments];
+      
+      if (sortField) {
+        sortedDocs.sort((a, b) => {
+          let aVal = a[sortField];
+          let bVal = b[sortField];
+          
+          if (sortField === 'date') {
+            aVal = new Date(aVal);
+            bVal = new Date(bVal);
+          }
+          
+          if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageData = sortedDocs.slice(startIndex, endIndex);
+      
+      pageData.forEach((doc, index) => {
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-50';
+        
+        const globalIndex = startIndex + index + 1;
+        
+        const statusColor = {
+          'รอดำเนินการ': 'bg-yellow-100 text-yellow-800',
+          'กำลังดำเนินการ': 'bg-blue-100 text-blue-800',
+          'เสร็จสิ้น': 'bg-green-100 text-green-800',
+          'ยกเลิก': 'bg-red-100 text-red-800'
+        }[doc.status] || 'bg-gray-100 text-gray-800';
+        
+        const fileId = doc.fileUrl.split('/d/')[1];
+        const viewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : doc.fileUrl;
+        
+        row.innerHTML = `
+          <td class="px-4 py-3">${globalIndex}</td>
+          <td class="px-4 py-3">${doc.name}</td>
+          <td class="px-4 py-3">${doc.position}</td>
+          <td class="px-4 py-3">${doc.employeeId}</td>
+          <td class="px-4 py-3">${formatDate(doc.date)}</td>
+          <td class="px-4 py-3 max-w-xs truncate">${doc.description}</td>
+          <td class="px-4 py-3">
+            <a href="${viewUrl}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">ดูไฟล์</a>
+          </td>
+          <td class="px-4 py-3">
+            <span class="px-3 py-1 rounded-full text-sm font-semibold ${statusColor}">${doc.status}</span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex gap-2">
+              <button onclick="openStatusModal('${doc.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">อัพเดท</button>
+              <button onclick="openDeleteModal('${doc.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">ลบ</button>
+            </div>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+      
+      renderPagination(sortedDocs.length);
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      });
+    }
+
+    function renderPagination(totalItems) {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+      
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      
+      if (totalPages <= 1) return;
+      
+      const prevButton = document.createElement('button');
+      prevButton.textContent = '← ก่อนหน้า';
+      prevButton.className = 'px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold transition duration-200' + (currentPage === 1 ? ' opacity-50 cursor-not-allowed' : '');
+      prevButton.disabled = currentPage === 1;
+      prevButton.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      };
+      pagination.appendChild(prevButton);
+      
+      const pageInfo = document.createElement('span');
+      pageInfo.textContent = `หน้า ${currentPage} / ${totalPages}`;
+      pageInfo.className = 'px-4 py-2 font-semibold';
+      pagination.appendChild(pageInfo);
+      
+      const nextButton = document.createElement('button');
+      nextButton.textContent = 'ถัดไป →';
+      nextButton.className = 'px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold transition duration-200' + (currentPage === totalPages ? ' opacity-50 cursor-not-allowed' : '');
+      nextButton.disabled = currentPage === totalPages;
+      nextButton.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      };
+      pagination.appendChild(nextButton);
+    }
+
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.sort;
+        
+        if (sortField === field) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortField = field;
+          sortDirection = 'asc';
+        }
+        
+        renderTable();
+      });
+    });
+
+    window.openDeleteModal = (id) => {
+      deleteTargetId = id;
+      document.getElementById('deleteAdminPassword').value = '';
+      document.getElementById('deleteModal').classList.add('active');
+    };
+
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.remove('active');
+      deleteTargetId = null;
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      
+      const password = document.getElementById('deleteAdminPassword').value;
+      
+      if (!password) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาใส่รหัสผ่านแอดมิน',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      document.getElementById('deleteModal').classList.remove('active');
+      
+      Swal.fire({
+        title: 'กำลังลบ...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      try {
+        const response = await fetch(`${API_URL}?action=delete&id=${deleteTargetId}&password=${encodeURIComponent(password)}`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error('ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+        }
+        
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'ลบสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          loadDocuments();
+        } else {
+          throw new Error(result.message || 'รหัสผ่านไม่ถูกต้อง');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#4F46E5'
+        });
+      } finally {
+        deleteTargetId = null;
+      }
+    });
+
+    window.openStatusModal = (id) => {
+      statusTargetId = id;
+      const doc = currentDocuments.find(d => d.id === id);
+      if (doc) {
+        document.getElementById('newStatus').value = doc.status;
+      }
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('statusModal').classList.add('active');
+    };
+
+    document.getElementById('cancelStatus').addEventListener('click', () => {
+      document.getElementById('statusModal').classList.remove('active');
+      statusTargetId = null;
+    });
+
+    document.getElementById('confirmStatus').addEventListener('click', async () => {
+      const password = document.getElementById('adminPassword').value;
+      const newStatus = document.getElementById('newStatus').value;
+      
+      if (!password) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาใส่รหัสผ่านแอดมิน',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      document.getElementById('statusModal').classList.remove('active');
+      
+      Swal.fire({
+        title: 'กำลังอัพเดท...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      try {
+        const response = await fetch(`${API_URL}?action=updateStatus&id=${statusTargetId}&status=${encodeURIComponent(newStatus)}&password=${encodeURIComponent(password)}`);
+        const text = await response.text();
+        
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          throw new Error('ไม่สามารถอัพเดทข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+        }
+        
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'อัพเดทสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          loadDocuments();
+        } else {
+          throw new Error(result.message || 'รหัสผ่านไม่ถูกต้อง');
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: error.message,
+          confirmButtonColor: '#4F46E5'
+        });
+      } finally {
+        statusTargetId = null;
+      }
+    });
+
+    document.getElementById('expandButton').addEventListener('click', () => {
+      const tableSection = document.getElementById('tableSection');
+      tableSection.classList.add('table-expanded');
+      document.getElementById('expandButton').style.display = 'none';
+      document.getElementById('collapseButton').style.display = 'inline-block';
+    });
+
+    document.getElementById('collapseButton').addEventListener('click', () => {
+      const tableSection = document.getElementById('tableSection');
+      tableSection.classList.remove('table-expanded');
+      document.getElementById('expandButton').style.display = 'inline-block';
+      document.getElementById('collapseButton').style.display = 'none';
+    });
+
+    document.getElementById('exportButton').addEventListener('click', () => {
+      if (currentDocuments.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีข้อมูลให้ Export',
+          confirmButtonColor: '#4F46E5'
+        });
+        return;
+      }
+      
+      const headers = ['ลำดับที่', 'ชื่อ', 'ตำแหน่ง', 'รหัสประจำตัว', 'วันที่', 'รายละเอียด', 'สถานะ', 'ไฟล์'];
+      const rows = currentDocuments.map((doc, index) => [
+        index + 1,
+        doc.name,
+        doc.position,
+        doc.employeeId,
+        formatDate(doc.date),
+        doc.description,
+        doc.status,
+        doc.fileUrl
+      ]);
+      
+      let csv = '\uFEFF';
+      csv += headers.join(',') + '\n';
+      rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `documents_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Export สำเร็จ',
+        timer: 1500,
+        showConfirmButton: false
       });
     });
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99cc50d06025a18c',t:'MTc2Mjg0ODY1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d1c065e2b64b8f',t:'MTc2MjkwNTY1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
